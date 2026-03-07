@@ -19,14 +19,17 @@ const produtosIniciais = [
     { id: 13, nome: "Terço de Carro (exclusivo) – Preto & Branco", preco: 15.00, categoria: "carro", imagem: "images/terco-13.jpg" },
     { id: 14, nome: "Rosario Compacto N.S. de Fátima – Marrom & Dourado", preco: 25.00, categoria: "rosarios", imagem: "images/terco-15.jpg" },
     { id: 15, nome: "Terço de Carro (exclusivo) – Rosa & Branco", preco: 15.00, categoria: "carro", imagem: "images/terco-16.jpg" },
-    { id: 16, nome: "Terço Compacto Pulseira São Miguel – Preto & Dourado", preco: 35.00, categoria: "pulseiras", imagem: "images/terco-17.jpg" },
+    { id: 16, nome: "Terço Compacto Pulseira São Miguel (unico item, consultar disponibilidade) – Preto & Dourado", preco: 20.00, categoria: "pulseiras", imagem: "images/terco-17.jpg" },
     { id: 17, nome: "Terço Grande N.S. Aparecida – A. Turquesa & Perola", preco: 40.00, categoria: "tercos", imagem: "images/terco-18.jpg" },
     { id: 18, nome: "Terço Pulseira exclusivo – Branco & Prata", preco: 20.00, categoria: "pulseiras", imagem: "images/terco-19.jpg" },
     { id: 19, nome: "Terço Grande N.S. Aparecida – V. Esmeralda & Perola", preco: 40.00, categoria: "tercos", imagem: "images/terco-20.jpg" },
     { id: 20, nome: "Terço N.S. Aparecida – Azul & Turquesa", preco: 35.00, categoria: "tercos", imagem: "images/terco-22.jpg" },
     { id: 21, nome: "Terço Luxo São Bento – Vermelho & Dourado", preco: 40.00, categoria: "tercos", imagem: "images/terco-25.jpg" },
     { id: 22, nome: "Terço Colar São Bento – Rosa & Prata", preco: 20.00, categoria: "tercos", imagem: "images/terco-27.jpg" },
-    { id: 23, nome: "Terço Luxo N.S. de Fátima – Translucida & Dourado", preco: 40.00, categoria: "tercos", imagem: "images/terco-23.jpg" }
+    { id: 23, nome: "Terço Luxo N.S. de Fátima – Translucida & Dourado", preco: 40.00, categoria: "tercos", imagem: "images/terco-23.jpg" },
+	{ id: 24, nome: "Terço Coroa das Lagrimas – Branco & Medalha Dupla", preco: 20.00, categoria: "tercos", imagem: "images/terco-28.jpg" },
+    { id: 25, nome: "Terço Santa Rita – Vermelho & Dourado", preco: 35.00, categoria: "tercos", imagem: "images/terco-29.jpg" },
+    { id: 26, nome: "Terço São Jose – Marrom & Dourado", preco: 30.00, categoria: "tercos", imagem: "images/terco-30.jpg" }
 ];
 
 // Depoimentos iniciais

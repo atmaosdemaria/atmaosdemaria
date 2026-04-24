@@ -24,8 +24,8 @@ Este é o portfólio online do **Ateliê Mãos de Maria**, um espaço artesanal 
 - Design responsivo (funciona perfeitamente em celular, tablet e desktop)  
 
 ## Como Ver o Portfólio Online
-Acesse o site hospedado gratuitamente no Netlify:  
-👉 **[https://atmaosdemaria.github.io/tercos-v2/]([https://atmaosdemaria.github.io/tercos-v2/])**  
+Acesse o site hospedado gratuitamente no 
+https://atmaosdemaria.github.io/atmaosdemaria/
 
 
 ## Como Contribuir ou Comprar

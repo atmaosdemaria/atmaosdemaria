@@ -1,19 +1,11 @@
 /* ========================================
    ATELIÊ MÃOS DE MARIA - app.js
-   Carrega produtos do GitHub automaticamente
+   Carrega produtos do Supabase e atualiza a loja automaticamente
    ======================================== */
 
 const CONFIG = {
-  whatsapp: "5519998949401",
-  gh_owner: "atmaosdemaria",
-  gh_repo:  "testeatmmaria",
-  gh_file:  "data/produtos.json"
+  whatsapp: SITE_CONFIG.whatsapp || '5519998949401'
 };
-
-// ── URL pública raw do GitHub (sem precisar de token para ler) ──
-function rawUrl() {
-  return `https://raw.githubusercontent.com/${CONFIG.gh_owner}/${CONFIG.gh_repo}/main/${CONFIG.gh_file}?t=${Date.now()}`;
-}
 
 let todosProdutos = [];
 let carrinho = [];
@@ -32,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ========================================
-// CARREGAR PRODUTOS DO GITHUB
+// CARREGAR PRODUTOS DO SUPABASE
 // ========================================
 async function carregarProdutos() {
   const grid = document.getElementById('produtos-grid');
@@ -44,27 +36,54 @@ async function carregarProdutos() {
   </div>`;
 
   try {
-    const res = await fetch(rawUrl());
-    if (!res.ok) throw new Error('Erro ao buscar produtos');
-    todosProdutos = await res.json();
+    if (!supabaseClient) throw new Error('Supabase não está configurado. Verifique js/config.js.');
+
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_CONFIG.table)
+      .select('*')
+      .order('ordem', { ascending: true });
+
+    if (error) throw error;
+
+    todosProdutos = Array.isArray(data) ? data : [];
+
+    // Limpar cache local para forçar atualização
+    localStorage.removeItem('produtos_cache');
+
+    if (!todosProdutos.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">
+        <p>Nenhum produto encontrado no banco de dados.</p>
+      </div>`;
+      return;
+    }
+
     inicializarFiltros();
     renderizarProdutos('todos');
   } catch (e) {
     console.error(e);
-    // fallback para localStorage se GitHub falhar
     const local = localStorage.getItem('produtos_cache');
     if (local) {
       todosProdutos = JSON.parse(local);
       inicializarFiltros();
       renderizarProdutos('todos');
-    } else {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">
-        <p>Não foi possível carregar os produtos. Tente recarregar a página.</p>
-      </div>`;
+      return;
     }
+
+    try {
+      const res = await fetch('data/produtos.json');
+      if (res.ok) {
+        todosProdutos = await res.json();
+        inicializarFiltros();
+        renderizarProdutos('todos');
+        return;
+      }
+    } catch (_) {}
+
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">
+      <p>Não foi possível carregar os produtos. Verifique a configuração do Supabase ou tente novamente.</p>
+    </div>`;
   }
 
-  // salva cache local
   if (todosProdutos.length) {
     localStorage.setItem('produtos_cache', JSON.stringify(todosProdutos));
   }

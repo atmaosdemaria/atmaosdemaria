@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Produtos - Ateliê Mãos de Maria</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #3D2B1F; text-align: center; }
+        .btn { background: #C9A84C; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin: 10px; }
+        .btn:hover { background: #E8C97A; }
+        .btn.danger { background: #E05C5C; }
+        .btn.danger:hover { background: #c0392b; }
+        .status { margin-top: 20px; padding: 15px; border-radius: 6px; white-space: pre-line; font-family: monospace; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ Importar Produtos para Supabase</h1>
+        <p>Esta página serve para importar os produtos do <code>produtos.json</code> para o Supabase.</p>
+
+        <div style="margin: 20px 0;">
+            <button class="btn" onclick="importarProdutos()">📦 Importar Produtos</button>
+            <button class="btn danger" onclick="limparELimparImportar()">🧹 Limpar e Reimportar</button>
+            <button class="btn" onclick="removerDuplicatas()">🔄 Remover Duplicatas</button>
+            <button class="btn" onclick="limparCache()">🗑️ Limpar Cache Local</button>
+            <button class="btn" onclick="debugProdutos()">🐛 Debug Produtos</button>
+        </div>
+
+        <div id="status" class="status info">
+            Status: Aguardando ação...
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background: #f8f5f0; border-radius: 6px;">
+            <h3>📋 Instruções:</h3>
+            <ol>
+                <li><strong>Primeiro:</strong> Clique em "Debug Produtos" para ver o status atual</li>
+                <li><strong>Se há duplicatas:</strong> Clique em "Remover Duplicatas"</li>
+                <li><strong>Sempre:</strong> Use "Limpar Cache Local" depois</li>
+                <li><strong>Para começar do zero:</strong> Use "Limpar e Reimportar"</li>
+                <li><strong>Para adicionar mais produtos:</strong> Use "Importar Produtos"</li>
+                <li>Volte para o site principal - os produtos estarão lá</li>
+                <li>Delete este arquivo <code>import.html</code> depois de usar</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+
+        function updateStatus(message, type = 'info') {
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        async function debugProdutos() {
+            try {
+                updateStatus('🐛 Analisando produtos...', 'info');
+
+                if (!window.supabase || !supabaseClient) {
+                    throw new Error('Supabase não está carregado');
+                }
+
+                // Buscar todos os produtos
+                const { data: produtos, error } = await supabaseClient
+                    .from('produtos')
+                    .select('*')
+                    .order('nome');
+
+                if (error) throw error;
+
+                // Analisar duplicatas
+                const nomesCount = {};
+                produtos.forEach(p => {
+                    nomesCount[p.nome] = (nomesCount[p.nome] || 0) + 1;
+                });
+
+                const duplicatas = Object.entries(nomesCount)
+                    .filter(([nome, count]) => count > 1)
+                    .map(([nome, count]) => `${nome}: ${count}x`);
+
+                const unicos = Object.keys(nomesCount).length;
+                const total = produtos.length;
+
+                let debugInfo = `📊 ANÁLISE COMPLETA:\n\n`;
+                debugInfo += `Total de registros: ${total}\n`;
+                debugInfo += `Produtos únicos: ${unicos}\n`;
+                debugInfo += `Duplicatas encontradas: ${duplicatas.length}\n\n`;
+
+                if (duplicatas.length > 0) {
+                    debugInfo += `🔍 DUPLICATAS:\n`;
+                    duplicatas.forEach(d => debugInfo += `• ${d}\n`);
+                } else {
+                    debugInfo += `✅ Nenhuma duplicata encontrada!\n`;
+                }
+
+                debugInfo += `\n💡 PRÓXIMOS PASSOS:\n`;
+                if (duplicatas.length > 0) {
+                    debugInfo += `• Clique em "Remover Duplicatas"\n`;
+                }
+                debugInfo += `• Clique em "Limpar Cache Local"\n`;
+                debugInfo += `• Recarregue o site principal`;
+
+                updateStatus(debugInfo, duplicatas.length > 0 ? 'error' : 'success');
+
+            } catch (e) {
+                updateStatus(`❌ ERRO no debug: ${e.message}`, 'error');
+            }
+        }
+            try {
+                localStorage.removeItem('produtos_cache');
+                updateStatus('✅ Cache local limpo!\n🔄 Recarregue o site principal para ver as mudanças.', 'success');
+            } catch (e) {
+                updateStatus(`❌ Erro ao limpar cache: ${e.message}`, 'error');
+            }
+        
+            try {
+                updateStatus('🔍 Verificando conexão...', 'info');
+
+                if (!window.supabase || !supabaseClient) {
+                    throw new Error('Supabase não está carregado');
+                }
+
+                const { data, error, count } = await supabaseClient
+                    .from('produtos')
+                    .select('*', { count: 'exact' });
+
+                if (error) throw error;
+
+                updateStatus(`✅ Conexão OK!\n📊 ${count} produtos na tabela`, 'success');
+
+            } catch (e) {
+                updateStatus(`❌ Erro: ${e.message}`, 'error');
+            }
+       
+
+        async function limparELimparImportar() {
+            try {
+                updateStatus('🔍 Verificando conexão...', 'info');
+
+                if (!window.supabase || !supabaseClient) {
+                    throw new Error('Supabase não está carregado. Aguarde alguns segundos.');
+                }
+
+                updateStatus('🧹 Limpando produtos existentes...', 'info');
+
+                const { error: deleteError } = await supabaseClient
+                    .from('produtos')
+                    .delete()
+                    .neq('id', 0);
+
+                if (deleteError) throw deleteError;
+
+                updateStatus('✅ Produtos antigos removidos\n📂 Carregando produtos.json...', 'success');
+
+                const response = await fetch('data/produtos.json');
+                if (!response.ok) throw new Error('Erro ao carregar produtos.json');
+                const produtos = await response.json();
+
+                updateStatus(`✅ JSON carregado\n📦 ${produtos.length} produtos encontrados\n💾 Inserindo no Supabase...`, 'success');
+
+                const produtosParaInserir = produtos.map(p => ({
+                    nome: p.nome,
+                    categoria: p.categoria,
+                    preco: p.preco,
+                    imagem: p.imagem,
+                    ordem: p.ordem || 1
+                }));
+
+                const { data, error } = await supabaseClient
+                    .from('produtos')
+                    .insert(produtosParaInserir);
+
+                if (error) throw error;
+
+                updateStatus(`✅ SUCESSO TOTAL!\n📊 ${data?.length || 0} produtos importados\n🔄 Você pode fechar esta página e voltar ao site principal`, 'success');
+
+            } catch (e) {
+                updateStatus(`❌ ERRO: ${e.message}\n\n💡 Possíveis soluções:\n1. Verifique se o RLS está desabilitado\n2. Verifique sua conexão\n3. Tente novamente em alguns segundos`, 'error');
+            }
+        }
+
+        async function importarProdutos() {
+            try {
+                updateStatus('🔍 Verificando conexão...', 'info');
+
+                if (!window.supabase || !supabaseClient) {
+                    throw new Error('Supabase não está carregado. Aguarde alguns segundos.');
+                }
+
+                updateStatus('📂 Carregando produtos.json...', 'info');
+
+                const response = await fetch('data/produtos.json');
+                if (!response.ok) throw new Error('Erro ao carregar produtos.json');
+                const produtos = await response.json();
+
+                updateStatus(`✅ JSON carregado\n📦 ${produtos.length} produtos encontrados\n💾 Inserindo no Supabase...`, 'success');
+
+                const produtosParaInserir = produtos.map(p => ({
+                    nome: p.nome,
+                    categoria: p.categoria,
+                    preco: p.preco,
+                    imagem: p.imagem,
+                    ordem: p.ordem || 1
+                }));
+
+                const { data, error } = await supabaseClient
+                    .from('produtos')
+                    .insert(produtosParaInserir);
+
+                if (error) throw error;
+
+                updateStatus(`✅ Produtos importados!\n📊 ${data?.length || 0} produtos adicionados\n🔄 Recarregue o site principal para ver`, 'success');
+
+            } catch (e) {
+                updateStatus(`❌ ERRO: ${e.message}\n\n💡 Possíveis soluções:\n1. Verifique se o RLS está desabilitado\n2. Verifique sua conexão\n3. Use "Limpar e Reimportar" se houver duplicatas`, 'error');
+            }
+        }
+
+        async function removerDuplicatas() {
+            try {
+                updateStatus('🔍 Verificando produtos duplicados...', 'info');
+
+                if (!window.supabase || !supabaseClient) {
+                    throw new Error('Supabase não está carregado');
+                }
+
+                // Buscar todos os produtos ordenados por nome e data de criação (mais recentes primeiro)
+                const { data: todosProdutos, error: selectError } = await supabaseClient
+                    .from('produtos')
+                    .select('*')
+                    .order('nome')
+                    .order('created_at', { ascending: false });
+
+                if (selectError) throw selectError;
+
+                updateStatus(`📊 Analisando ${todosProdutos.length} produtos...`, 'info');
+
+                // Usar um Map para manter apenas o produto mais recente de cada nome
+                const produtosUnicos = new Map();
+                const idsParaDeletar = [];
+
+                todosProdutos.forEach(produto => {
+                    if (!produtosUnicos.has(produto.nome)) {
+                        // Primeiro produto com este nome (mais recente devido ao order)
+                        produtosUnicos.set(produto.nome, produto);
+                    } else {
+                        // Este é duplicata, marcar para deletar
+                        idsParaDeletar.push(produto.id);
+                    }
+                });
+
+                const numDuplicatas = idsParaDeletar.length;
+                const numUnicos = produtosUnicos.size;
+
+                if (numDuplicatas === 0) {
+                    updateStatus('✅ Não há duplicatas!\n📊 Todos os produtos são únicos.', 'success');
+                    return;
+                }
+
+                updateStatus(`🗑️ Removendo ${numDuplicatas} duplicatas...\n📊 Mantendo ${numUnicos} produtos únicos.\n⏳ Aguarde...`, 'info');
+
+                // Deletar duplicatas em lotes para evitar timeout
+                const loteSize = 100;
+                for (let i = 0; i < idsParaDeletar.length; i += loteSize) {
+                    const lote = idsParaDeletar.slice(i, i + loteSize);
+                    const { error: deleteError } = await supabaseClient
+                        .from('produtos')
+                        .delete()
+                        .in('id', lote);
+
+                    if (deleteError) throw deleteError;
+
+                    const progresso = Math.min(i + lote.length, idsParaDeletar.length);
+                    updateStatus(`🗑️ Removendo duplicatas... (${progresso}/${idsParaDeletar.length})`, 'info');
+                }
+
+                updateStatus(`✅ Duplicatas removidas!\n📊 Agora você tem ${numUnicos} produtos únicos.\n🧹 Limpando cache local...\n🔄 Recarregue o site principal para ver as mudanças.`, 'success');
+
+                // Limpar cache local para forçar recarregamento
+                localStorage.removeItem('produtos_cache');
+
+            } catch (e) {
+                updateStatus(`❌ ERRO: ${e.message}`, 'error');
+            }
+        }
